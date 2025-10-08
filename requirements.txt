@@ -1,3 +1,5 @@
+langchain-huggingface
+langchain-text-splitters
 https://github.com/hyperskill/hs-test-python/archive/release.tar.gz
 chromadb
 langchain-chroma

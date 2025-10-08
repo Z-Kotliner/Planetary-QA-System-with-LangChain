@@ -1,44 +1,36 @@
+import os
+
 import dotenv
-from langchain_core.prompts import FewShotPromptTemplate
-from langchain_core.prompts import PromptTemplate
-from langchain_groq import ChatGroq
+from langchain_chroma import Chroma
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # Load API keys as environment variables
 dotenv.load_dotenv()
 
-# Initialize Groq chat LLM API
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    temperature=0.0,
-    max_retries=2
-)
-# Load a Prompt Template in the form a Q & A
-example_template = PromptTemplate.from_template("Q: {input}\nA: {output}")
+# Load planetary data from "planets/" directory
+loader = DirectoryLoader("planets", glob="*.txt", loader_cls=TextLoader)
+documents = loader.load()
 
-# Provide example for the few-shot Prompt
-examples = [
-    {"input": "Sun", "output": "The Sun is the star at the center of our solar system."},
-    {"input": "Moon",
-     "output": "The Moon is a planetary-mass object or satellite planet. It is the earth's only natural satellite."},
-]
+# Create a recursive Character text splitter
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=0)
 
-# Initialize Few-shot prompt template
-few_shot_prompt = FewShotPromptTemplate(
-    examples=examples,
-    example_prompt=example_template,
-    prefix="Provide key details of the input. Provide relevant facts each line by line. Maximum 3 lines.",
-    suffix="Q: {question}\nA:",
-    input_variables=["question"],
+# Split documents into chunks
+chunked_documents = text_splitter.split_documents(documents)
+
+# Initialize HF embeddings
+embeddings_model = HuggingFaceEndpointEmbeddings(
+    model="sentence-transformers/all-MiniLM-L6-v2",
+    huggingfacehub_api_token=os.getenv("HF_API_KEY"),
 )
 
-# Accept user input
-user_input = input().lower()
+# Convert document data into vector embedding and store in Chroma vector store
+db = Chroma.from_documents(documents, embeddings_model)
 
-# Generate String Prompt formatting it with input
-final_prompt = few_shot_prompt.format(question=user_input)
+# Fetch relevant documents based on user queries using similarity search
+query = input().lower()
+docs = db.similarity_search(query)
 
-# Invoke LLM and receive output.
-response = llm.invoke(final_prompt)
-
-# Print output content
-print(response.content)
+# Print the contents of the most similar document.
+print(docs[0].page_content)
