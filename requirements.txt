@@ -5,6 +5,5 @@ chromadb
 langchain-chroma
 langchain-community
 langchain-core
-langchain-openai
 langchain-groq
 python-dotenv
