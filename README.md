@@ -46,7 +46,7 @@ This project utilizes a variety of powerful tools and technologies to build an i
 
 1. **Clone the repository**:
      ```bash
-    git clone https://github.com/yourusername/introduction-to-langchain.git
+    git clone https://github.com/Z-Kotliner/Planetary-QA-System-with-LangChain.git
     cd introduction-to-langchain
 
 2. **Set up a Python virtual environment (optional but recommended):**
